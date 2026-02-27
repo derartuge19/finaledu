@@ -428,31 +428,41 @@ def render_pdf_certificate(
         except Exception as me:
             print(f"DEBUG: Could not set metadata: {me}")
 
-    # --- Add Blue 'Verified' Ribbon + Clickable Link ---
+    # --- Add Blue 'Verified' Ribbon + Clickable Metadata ---
     try:
         # Only add ribbon if signature or stamp is present (implies signed/official)
         if signature_img_path or stamp_img_path:
-            ribbon_path = os.path.join(os.getcwd(), "static", "verified_ribbon.png")
+            ribbon_path = os.path.join(os.getcwd(), "static", "verified_ribbon-removebg-preview.png")
             if os.path.exists(ribbon_path):
-                ribbon_w, ribbon_h = 120, 40
-                margin = 20
+                # Make it large and prominent, square aspect ratio
+                ribbon_w, ribbon_h = 240, 240
+                margin_x = 40
+                margin_y = 40
                 page = doc[0]
-                page_w = page.rect.width
-                ribbon_rect = fitz.Rect(page_w - ribbon_w - margin, margin, page_w - margin, margin + ribbon_h)
+                
+                # Top-left corner
+                ribbon_rect = fitz.Rect(margin_x, margin_y, margin_x + ribbon_w, margin_y + ribbon_h)
                 
                 # 1. Image
                 page.insert_image(ribbon_rect, filename=ribbon_path, keep_proportion=True, overlay=True)
                 
-                # 2. Clickable Link
-                cert_id = metadata.get("cert_id") if metadata else None
-                if cert_id:
-                    verify_url = f"http://localhost:3000/verify?id={cert_id}"
-                    page.insert_link({
-                        "kind": fitz.LINK_URI,
-                        "from": ribbon_rect,
-                        "uri": verify_url
-                    })
-                    print(f"DEBUG: Added Verified Ribbon and link to {verify_url}")
+                # 2. Clickable Metadata Annotation
+                cert_id = metadata.get("cert_id") if metadata else "N/A"
+                now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                meta_text = (
+                    f"Certificate ID: {cert_id}\n"
+                    f"Where: EduCert Secure Verification System\n"
+                    f"When: {now_str}\n"
+                    f"Best Practice: This document is digitally verified. "
+                    f"Ensure the details match the issuing authority's records."
+                )
+                
+                # Add text annotation near the ribbon
+                annot = page.add_text_annot(fitz.Point(ribbon_rect.x0 + 5, ribbon_rect.y0 + 5), meta_text, icon="Note")
+                annot.set_info(title="Verification Metadata")
+                annot.update()
+                
+                print(f"DEBUG: Added Verified Ribbon and metadata annotation")
     except Exception as ree:
         print(f"DEBUG: Failed to add ribbon: {ree}")
             
@@ -655,34 +665,38 @@ def apply_signatures_to_pdf(
         except Exception as e:
             print(f"DEBUG [apply_sigs]: Could not set metadata: {e}")
 
-    # --- Add Blue 'Verified' Ribbon + Clickable Link ---
+    # --- Add Blue 'Verified' Ribbon + Clickable Metadata ---
     try:
-        ribbon_path = os.path.join(os.getcwd(), "static", "verified_ribbon.png")
+        ribbon_path = os.path.join(os.getcwd(), "static", "verified_ribbon-removebg-preview.png")
         if os.path.exists(ribbon_path):
-            # Place in top-left or top-right. Let's do top-left relative to margins.
-            # Formal size for ribbon: 120pt x 40pt
-            ribbon_w, ribbon_h = 120, 40
-            # Offset from top-right corner
-            margin = 20
+            # Make it large and prominent, square aspect ratio
+            ribbon_w, ribbon_h = 240, 240
+            margin_x = 40
+            margin_y = 40
             page = doc[0] # Always first page
-            page_w = page.rect.width
-            ribbon_rect = fitz.Rect(page_w - ribbon_w - margin, margin, page_w - margin, margin + ribbon_h)
+            
+            # Top-left corner
+            ribbon_rect = fitz.Rect(margin_x, margin_y, margin_x + ribbon_w, margin_y + ribbon_h)
             
             # 1. Overlay the ribbon image
             page.insert_image(ribbon_rect, filename=ribbon_path, keep_proportion=True, overlay=True)
             
-            # 2. Add clickable link to verification portal
-            cert_id = metadata.get("cert_id") if metadata else None
-            if cert_id:
-                # Use standard FRONTEND_URL if possible, fallback to localhost
-                # Note: PyMuPDF links are added via 'insert_link'
-                verify_url = f"http://localhost:3000/verify?id={cert_id}"
-                page.insert_link({
-                    "kind": fitz.LINK_URI,
-                    "from": ribbon_rect,
-                    "uri": verify_url
-                })
-                print(f"DEBUG [apply_sigs]: Added Verified Ribbon and link to {verify_url}")
+            # 2. Add clickable metadata
+            cert_id = metadata.get("cert_id") if metadata else "N/A"
+            now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            meta_text = (
+                f"Certificate ID: {cert_id}\n"
+                f"Where: EduCert Secure Verification System\n"
+                f"When: {now_str}\n"
+                f"Best Practice: This document is digitally verified. "
+                f"Ensure the details match the issuing authority's records."
+            )
+            
+            annot = page.add_text_annot(fitz.Point(ribbon_rect.x0 + 5, ribbon_rect.y0 + 5), meta_text, icon="Note")
+            annot.set_info(title="Verification Metadata")
+            annot.update()
+                
+            print(f"DEBUG [apply_sigs]: Added Verified Ribbon and metadata annotation")
     except Exception as ree:
         print(f"DEBUG [apply_sigs]: Failed to add ribbon: {ree}")
 
