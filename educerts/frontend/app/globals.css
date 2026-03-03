@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+}
+
+.premium-card {
+  @apply bg-white border border-slate-200 shadow-sm rounded-2xl transition-all duration-300;
+}
+
+.premium-card:hover {
+  @apply shadow-xl shadow-indigo-500/5 border-indigo-500/20;
+}
+
+/* QR Scanner Animation */
+@keyframes scan-line {
+  0% {
+    top: 10%;
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    top: 90%;
+    opacity: 1;
+  }
+}
+
+.animate-scan-line {
+  animation: scan-line 2s ease-in-out infinite;
+}
+
+/* Hide html5-qrcode default UI */
+#qr-reader__dashboard_section_csr {
+  display: none !important;
+}
+
+#qr-reader__dashboard_section_swaplink {
+  display: none !important;
+}
+
+#qr-reader__status_span {
+  display: none !important;
+}
+
+#qr-reader {
+  border: none !important;
+  padding: 0 !important;
+}
+
+#qr-reader video {
+  border-radius: 1.5rem !important;
+  object-fit: cover !important;
+}
+
+/* Mobile Wallet Styles */
+@media (max-width: 640px) {
+  .mobile-safe-area {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+}
