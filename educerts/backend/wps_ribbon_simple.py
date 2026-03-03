@@ -46,19 +46,7 @@ class SimpleWPSRibbon:
             click_point = fitz.Point(page_width - 200, 22)
             page.insert_text(click_point, click_text, fontsize=9, color=self.text_color)
             
-            # Add metadata overlay directly on page
-            self._add_metadata_overlay(page, cert_data, page_width)
-            
-            # Make ribbon clickable to toggle metadata visibility
-            link_rect = fitz.Rect(0, 0, page_width, self.ribbon_height)
-            link = {
-                "kind": fitz.LINK_URI,
-                "from": link_rect,
-                "uri": "javascript:toggleMetadataVisibility();"
-            }
-            page.insert_link(link)
-            
-            # Add metadata to PDF properties
+            # Add metadata to PDF properties only
             self._add_metadata_to_properties(doc, cert_data)
             
             print(f"✅ Added sky blue WPS ribbon with metadata overlay")
@@ -67,65 +55,6 @@ class SimpleWPSRibbon:
         doc.save(output_path)
         doc.close()
         return output_path
-    
-    def _add_metadata_overlay(self, page, cert_data, page_width):
-        """Add metadata overlay directly on PDF page"""
-        # Create metadata overlay area
-        overlay_height = 200
-        overlay_y = 50  # Start below ribbon
-        
-        # Background for metadata
-        overlay_rect = fitz.Rect(50, overlay_y, page_width - 100, overlay_y + overlay_height)
-        page.draw_rect(overlay_rect, color=(0.95, 0.95, 0.95), fill=(0.95, 0.95, 0.95))
-        page.draw_rect(overlay_rect, color=(0.2, 0.2, 0.2), fill=None, width=2)
-        
-        # Add metadata text
-        y_offset = overlay_y + 20
-        metadata_items = [
-            ("SIGNATURE METADATA", 12, (0, 0, 0)),
-            (f"Certificate ID: {cert_data.get('id', 'N/A')}", 10, (0.1, 0.1, 0.1)),
-            (f"Student Name: {cert_data.get('student_name', 'N/A')}", 10, (0.1, 0.1, 0.1)),
-            (f"Course Name: {cert_data.get('course_name', 'N/A')}", 10, (0.1, 0.1, 0.1)),
-            (f"Issue Date: {cert_data.get('issued_at', 'N/A')}", 10, (0.1, 0.1, 0.1)),
-            (f"Organization: {cert_data.get('organization', 'EduCerts')}", 10, (0.1, 0.1, 0.1)),
-            ("", 10, (0.1, 0.1, 0.1)),  # Spacer
-            ("DIGITAL SIGNATURE:", 11, (0, 0.2, 0.8)),
-            ("• Status: VERIFIED & AUTHENTIC", 9, (0.1, 0.1, 0.1)),
-            ("• Algorithm: Ed25519 Cryptographic", 9, (0.1, 0.1, 0.1)),
-            ("• Content Hash: SHA-256", 9, (0.1, 0.1, 0.1)),
-            ("• Registry: Blockchain Anchored", 9, (0.1, 0.1, 0.1)),
-        ]
-        
-        for text, fontsize, color in metadata_items:
-            if text:  # Skip empty lines
-                y_offset += 15
-                continue
-            text_point = fitz.Point(70, y_offset)
-            page.insert_text(text_point, text, fontsize=fontsize, color=color)
-            y_offset += 18
-        
-        # Add close button
-        close_button_rect = fitz.Rect(page_width - 150, overlay_y + overlay_height - 40, page_width - 60, overlay_y + overlay_height - 15)
-        page.draw_rect(close_button_rect, color=(0.8, 0.2, 0.2), fill=(0.8, 0.2, 0.2))
-        close_text = "✕ Close"
-        close_point = fitz.Point(page_width - 140, overlay_y + overlay_height - 30)
-        page.insert_text(close_point, close_text, fontsize=10, color=(1, 1, 1))
-        
-        # Add JavaScript to control visibility
-        toggle_js = """
-function toggleMetadataVisibility() {
-    var overlay = this.getField('metadataOverlay');
-    if (overlay) {
-        overlay.display = (overlay.display === 'hidden') ? 'visible' : 'hidden';
-    }
-}
-        """
-        
-        # Add JavaScript to document
-        try:
-            doc.add_javascript("metadataToggle", toggle_js)
-        except:
-            print("Note: JavaScript could not be added, but overlay is still visible")
     
     def _add_zigzag_edges(self, page, ribbon_rect):
         """Add zigzag edges to ribbon for authentic WPS look"""
