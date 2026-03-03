@@ -1206,6 +1206,9 @@ async def bulk_issue_from_excel(
         print(f"DEBUG: Cert type: {cert_type}")
         
         import re
+        import pandas as pd
+        from io import StringIO
+        
         filename_lower = file.filename.lower()
         if not (filename_lower.endswith(".xlsx") or filename_lower.endswith(".csv")):
             raise HTTPException(status_code=400, detail="Only .xlsx or .csv files are allowed")
@@ -1232,14 +1235,25 @@ async def bulk_issue_from_excel(
 
         # Parse the file
         content_bytes = await file.read()
+        print(f"DEBUG: File size: {len(content_bytes)} bytes")
+        
         if filename_lower.endswith(".xlsx"):
-            import pandas as pd
-            df = pd.read_excel(content_bytes)
-            rows = df.to_dict('records')
+            try:
+                df = pd.read_excel(content_bytes)
+                rows = df.to_dict('records')
+                print(f"DEBUG: Excel parsed successfully, {len(rows)} rows")
+            except Exception as e:
+                print(f"DEBUG: Excel parsing error: {e}")
+                raise HTTPException(status_code=400, detail=f"Failed to parse Excel file: {str(e)}")
         else:  # CSV
-            content_str = content_bytes.decode('utf-8')
-            df = pd.read_csv(StringIO(content_str))
-            rows = df.to_dict('records')
+            try:
+                content_str = content_bytes.decode('utf-8')
+                df = pd.read_csv(StringIO(content_str))
+                rows = df.to_dict('records')
+                print(f"DEBUG: CSV parsed successfully, {len(rows)} rows")
+            except Exception as e:
+                print(f"DEBUG: CSV parsing error: {e}")
+                raise HTTPException(status_code=400, detail=f"Failed to parse CSV file: {str(e)}")
 
         total_rows = len(rows)
         if total_rows == 0:
@@ -1247,13 +1261,18 @@ async def bulk_issue_from_excel(
 
         # Normalize column names
         headers = list(rows[0].keys()) if rows else []
+        print(f"DEBUG: Headers found: {headers}")
+        
         name_col = next((h for h in headers if normalize_column_name(h) == "student_name"), None)
         if not name_col:
             name_col = next((h for h in headers if "name" in h.lower() or "roll" in h.lower() or "id" in h.lower()), None)
+        
+        print(f"DEBUG: Name column: {name_col}")
 
         curr_organization = "EduCerts Academy"
         issued_certs = []
         target_hashes = []
+        batch_data = []
 
         for idx, row in enumerate(rows):
             print(f"DEBUG: Processing row {idx+1}/{total_rows}...")
@@ -1294,9 +1313,12 @@ async def bulk_issue_from_excel(
                 "data_payload_fields": data_payload_fields
             })
 
+        print(f"DEBUG: Created {len(batch_data)} certificates in batch_data")
+
         # Create batch signature for all certificates
         batch_id = str(uuid.uuid4())
         batch_sig = crypto_utils.sign_batch(target_hashes)
+        print(f"DEBUG: Created batch signature: {batch_sig[:20]}...")
         
         # Create document registry entry
         registry_entry = models.DocumentRegistry(
@@ -1308,6 +1330,7 @@ async def bulk_issue_from_excel(
         )
         db.add(registry_entry)
         db.commit()
+        print(f"DEBUG: Registry entry created: {batch_id}")
 
         # Process each certificate
         for idx, item in enumerate(batch_data):
@@ -1369,6 +1392,8 @@ async def bulk_issue_from_excel(
             "certificates": issued_certs
         }
     
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
     except Exception as e:
         import traceback
         print(f"ERROR in bulk_issue_from_excel: {e}")
