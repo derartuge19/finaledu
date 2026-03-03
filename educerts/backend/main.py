@@ -15,7 +15,7 @@ import hashlib
 import random
 import os
 from xhtml2pdf import pisa
-from io import BytesIO
+from io import BytesIO, StringIO
 import qrcode
 import base64
 from dotenv import load_dotenv
