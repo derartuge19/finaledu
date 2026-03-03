@@ -92,7 +92,7 @@ class SimpleWPSRibbon:
         metadata["title"] = f"Verified Certificate - {cert_data.get('id', 'N/A')[:8]}"
         metadata["author"] = "EduCert Secure Verification System"
         metadata["subject"] = cert_data.get('id', 'N/A')
-        metadata["keywords"] = f"VERIFIED, Certificate ID: {cert_data.get('id', 'N/A')}, Student: {cert_data.get('student_name', 'N/A')}, Course: {cert_data.get('course_name', 'N/A')}, Issued: {cert_data.get('issued_at', 'N/A')}, Organization: {cert_data.get('organization', 'EduCerts')}"
+        metadata["keywords"] = f"VERIFIED, Certificate ID: {cert_data.get('id', 'N/A')}, Student: {cert_data.get('student_name', 'N/A')}, Issued: {cert_data.get('issued_at', 'N/A')}, Organization: {cert_data.get('organization', 'EduCerts')}"
         metadata["creator"] = "EduCert Engine v2.0 - Cryptographically Secured"
         metadata["producer"] = f"EduCert Secure Platform - Verified Certificate"
         doc.set_metadata(metadata)

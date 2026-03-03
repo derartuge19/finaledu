@@ -76,24 +76,17 @@ def get_db():
 def normalize_column_name(header: str) -> str:
     """
     Normalizes a header name (lowercase, strip, underscores).
-    Maps common aliases to student_name and course_name.
+    Maps common aliases to student_name.
     """
     if not header:
         return ""
-    import re
-    h = str(header).lower().strip()
-    h = h.replace(" ", "_").replace("-", "_")
-    h = re.sub(r'[^a-z0-9_]', '', h)
+    
+    h = header.strip().lower()
     
     # Aliases for student_name
-    if h in {"student_name", "student", "full_name", "name", "recipient", "recipient_name", "candidate_name", "student_fullname",
+    if h in {"student_name", "name", "full_name", "student", "candidate", "participant", "attendee",
              "rollno", "roll_no", "enrn", "enrollment_no", "student_id", "reg_no", "registration_number", "studentname", "fullname"}:
         return "student_name"
-    
-    # Aliases for course_name
-    if h in {"course_name", "course", "subject", "program", "training_name", "training", "module", "study_program",
-             "subject_1", "subject_code", "course_code", "coursename", "trainingname"}:
-        return "course_name"
 
     return h
 

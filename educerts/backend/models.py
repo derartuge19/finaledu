@@ -19,7 +19,6 @@ class Certificate(Base):
     id = Column(String(36), primary_key=True, index=True)  # UUID
     student_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     student_name = Column(String(200))
-    course_name = Column(String(200))
     cert_type = Column(String(50), default="certificate")
     data_payload = Column(JSON)
     signature = Column(Text)
