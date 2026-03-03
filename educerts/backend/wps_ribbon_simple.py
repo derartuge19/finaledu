@@ -17,7 +17,7 @@ class SimpleWPSRibbon:
         self.text_color = (1, 1, 1)  # White text
         
     def add_wps_ribbon(self, pdf_path, output_path, cert_data):
-        """Add WPS-style ribbon to PDF as overlay (shifts content down)"""
+        """Add WPS-style ribbon to PDF as visible overlay"""
         
         doc = fitz.open(pdf_path)
         
@@ -27,30 +27,16 @@ class SimpleWPSRibbon:
             page_rect = page.rect
             page_width = page_rect.width
             
-            # SHIFT ALL CONTENT DOWN to make room for ribbon
-            # Create a new page with ribbon space at top
-            new_page_rect = fitz.Rect(0, 0, page_width, page_rect.height + self.ribbon_height)
-            new_page = doc.new_page(-1, width=page_width, height=page_rect.height + self.ribbon_height)
-            
-            # Copy original content to new position (shifted down)
-            page.show_pdf_page(new_page, fitz.Rect(0, self.ribbon_height, page_width, page_rect.height + self.ribbon_height))
-            
-            # Remove the original page
-            doc.delete_page(page)
-            
-            # Now work with the new page that has space at top
-            page = new_page
-            
-            # Create ribbon area at the very top (now has space)
+            # Create ribbon area at the very top
             ribbon_rect = fitz.Rect(0, 0, page_width, self.ribbon_height)
             
-            # Draw main ribbon background
+            # Draw main ribbon background (sky blue)
             page.draw_rect(ribbon_rect, color=self.ribbon_color, fill=self.ribbon_color)
             
             # Add verification text
             main_text = "✓ CERTIFICATE VERIFIED - EduCerts"
             main_point = fitz.Point(15, 22)
-            page.insert_text(main_point, main_text, fontsize=10, color=self.text_color)
+            page.insert_text(main_text, main_text, fontsize=10, color=self.text_color)
             
             # Add click instruction
             click_text = "Click for verification details ›"
@@ -69,7 +55,7 @@ class SimpleWPSRibbon:
             
             print(f"✅ Added sky blue WPS ribbon with real verification link: {verify_url}")
         
-        # Save with ribbon overlay
+        # Save with ribbon
         doc.save(output_path)
         doc.close()
         return output_path
